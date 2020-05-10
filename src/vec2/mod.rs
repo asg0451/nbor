@@ -13,8 +13,6 @@ mod vec2 {
         + Num
         + Zero
         + Copy
-        + TryInto<f64>
-        + TryFrom<f64>
         + Signed
         + std::fmt::Debug
     where
@@ -30,8 +28,6 @@ mod vec2 {
             + Num
             + Zero
             + Copy
-            + TryInto<f64>
-            + TryFrom<f64>
             + Signed
             + std::fmt::Debug
     {
@@ -51,6 +47,15 @@ mod vec2 {
             }
         }
 
+        pub fn new(x: T, y: T) -> Vec2<T> {
+            Vec2 { x, y }
+        }
+    }
+
+    // these operations only defined when T is convertible to and from an f64
+    // from: we need it for sqrt
+    // to: because it returns a T
+    impl<T: VecContent + TryInto<f64> + TryFrom<f64>> Vec2<T> {
         pub fn distance(&self, o: &Self) -> T {
             use num::traits::{abs, pow};
             // this is kinda wonky. converts to an f64 and maybe back to do this.
@@ -74,10 +79,6 @@ mod vec2 {
             v.x = v.x / m;
             v.y = v.y / m;
             v
-        }
-
-        pub fn new(x: T, y: T) -> Vec2<T> {
-            Vec2 { x, y }
         }
     }
 

@@ -4,6 +4,7 @@ mod planet {
 
     static mut NEXT_ID: i32 = 0;
 
+    // TODO should this be copy?
     #[derive(Clone, Copy, Debug)]
     pub struct Planet {
         id: i32,
