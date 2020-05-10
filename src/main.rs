@@ -1,6 +1,8 @@
+mod planet;
 mod util;
 mod vec2;
 
+use planet::*;
 use vec2::*;
 
 fn main() {
@@ -13,4 +15,8 @@ fn main() {
 
     let v4 = v + 10;
     println!("{:?} {:?}", &v, &v4);
+
+    let p = Planet::new(10.0, Vec2::zero(), Vec2::zero());
+    let p2 = Planet::new(10.0, Vec2::zero(), Vec2::zero());
+    println!("{:?} {:?}", &p, &p2)
 }
