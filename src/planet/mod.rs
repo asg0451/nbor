@@ -20,6 +20,10 @@ mod planet {
         pub fn mass(&self) -> f64 {
             self.mass
         }
+        pub fn loc(&self) -> Vec2<f64> {
+            self.loc
+        }
+
         pub fn accel_by(&mut self, accel: Vec2<f64>) {
             self.vel += accel
         }

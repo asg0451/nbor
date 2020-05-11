@@ -50,6 +50,14 @@ mod vec2 {
         pub fn new(x: T, y: T) -> Vec2<T> {
             Vec2 { x, y }
         }
+
+        pub fn x(&self) -> T {
+            self.x
+        }
+
+        pub fn y(&self) -> T {
+            self.y
+        }
     }
 
     // these operations only defined when T is convertible to and from an f64

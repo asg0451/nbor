@@ -8,4 +8,7 @@ edition = "2018"
 
 [dependencies]
 num = "0.2"
-generic-array = "0.14"
+# generic-array = "0.14"
+terminal_size = "0.1"
+# ringbuf = "0.2"
+ctrlc = "3.1"

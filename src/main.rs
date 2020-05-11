@@ -1,30 +1,68 @@
 mod planet;
+mod render;
+mod ring_buffer;
 mod sim;
 mod util;
 mod vec2;
 
 use planet::*;
+use render::*;
 use vec2::*;
 
+use std::io::{self, Write}; // flush
+
 fn main() {
-    // TODO: fix this shit
-    let v = Vec2::<i32>::zero();
-    let v2 = Vec2::<i32>::new(1, 1);
-    println!("{:?} {:?}", &v, &v2);
+    // println!("{}", Screen::clear());
+    // println!("screen size: {:?}", Screen::term_size());
+    // print!("{}", Screen::cursor_move(20, 10));
+    // println!("moved?");
 
-    let v3 = v + v2;
-    println!("{:?} {:?} {:?}", &v, &v2, &v3);
-
-    let v4 = v + 10;
-    println!("{:?} {:?}", &v, &v4);
-
-    let p = Planet::new(10.0, Vec2::zero(), Vec2::zero());
-    let p2 = Planet::new(10.0, Vec2::new(0.0, 1.0), Vec2::zero());
+    let p = Planet::new(10.0, Vec2::new(7.0, 5.0), Vec2::new(1.0, 0.0));
+    let p2 = Planet::new(10.0, Vec2::new(4.0, 6.0), Vec2::zero());
     let mut planets = [p, p2];
-    println!("{:?}", planets);
+    let space_dim = Vec2::new(10.0, 10.0);
 
-    for _ in 0..10 {
-        sim::tick(0.1, 1.0, &mut planets);
-        println!("{:#?}", planets);
+    // let mut rb = ring_buffer::RingBuffer::<i32>::new(10);
+    // for i in 0..15 {
+    //     rb.push(i);
+    //     println!("added {:?} to {:?}", i, rb);
+    // }
+    // println!("{:?}", rb);
+    // for el in rb.iter() {
+    //     println!("{:?}", el);
+    // }
+
+    // let mut rb = ring_buffer::RingBuffer::<i32>::new(10);
+    // for i in 0..5 {
+    //     rb.push(i);
+    //     println!("added {:?} to {:?}", i, rb);
+    // }
+    // println!("{:?}", rb);
+    // for el in rb.iter() {
+    //     println!("{:?}", el);
+    // }
+
+    print!("{}", Screen::CURSOR_INVISIBLE);
+
+    // TODO: this, properly
+    ctrlc::set_handler(move || {
+        println!("{}", Screen::CURSOR_VISIBLE);
+        io::stdout().flush().unwrap();
+        std::process::exit(1);
+    })
+    .unwrap();
+
+    // TODO: render, sim threads
+    let renderer = &mut render::Renderer::new(2_000);
+
+    loop {
+        sim::tick(0.001, 1.0, &mut planets);
+        let str =
+            renderer.pretty_print_term_with_breadcrumbs(&planets, &Screen::term_size(), &space_dim);
+        print!("{}", Screen::CLEAR);
+        print!("{}", str);
+        io::stdout().flush().unwrap();
+
+        // std::thread::sleep(std::time::Duration::from_millis(500));
     }
 }
