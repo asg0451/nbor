@@ -37,7 +37,7 @@ fn main() {
     let ren_planet_amx = Arc::clone(&planet_amx);
     let sim_planet_amx = Arc::clone(&planet_amx);
     let ren_th = render::render_thread(ren_planet_amx, ren_sleep, space_dims, 100);
-    let sim_th = sim::sim_thread(sim_planet_amx, sim_sleep, 0.000_001);
+    let sim_th = sim::sim_thread(sim_planet_amx, sim_sleep, 0.0000001);
 
     ren_th.join().unwrap();
     sim_th.join().unwrap();
