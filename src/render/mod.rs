@@ -26,6 +26,7 @@ mod render {
         }
     }
 
+    #[derive(Debug)]
     pub struct Renderer {
         breadcrumbs: RingBuffer<Vec2<f64>>,
     }
