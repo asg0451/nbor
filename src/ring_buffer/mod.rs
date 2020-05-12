@@ -28,9 +28,7 @@ where
         self.idx = (self.idx + 1) % self.max;
     }
 
-    pub fn iter<'a>(&'a self) -> RingBufferIterator<'a, T> {
-        // println!("making iterator for {:#?}", *self);
-
+    pub fn iter(&self) -> RingBufferIterator<T> {
         RingBufferIterator {
             rb: self,
             idx: self.idx % self.vec.len(),
@@ -41,21 +39,16 @@ where
 }
 
 #[derive(Debug)]
-pub struct RingBufferIterator<'a, T> {
+pub struct RingBufferIterator<'a, T: std::fmt::Debug> {
     rb: &'a RingBuffer<T>,
     idx: usize,
     len: usize,
     counter: usize,
 }
-impl<'a, T> Iterator for RingBufferIterator<'a, T>
-where
-    T: std::fmt::Debug,
-{
+impl<'a, T: std::fmt::Debug> Iterator for RingBufferIterator<'a, T> {
     type Item = &'a T;
     fn next(&mut self) -> Option<&'a T> {
         let res = if self.counter < self.len {
-            // println!("iterating {:#?}", self);
-
             Some(&self.rb.vec[self.idx])
         } else {
             None
