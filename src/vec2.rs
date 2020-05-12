@@ -1,7 +1,5 @@
-use num::{Num, Signed, Zero};
+use num::{Float, Num, Signed, Zero};
 use std::ops::*;
-
-use std::convert::{TryFrom, TryInto};
 
 pub trait VecContent:
     Add<Output = Self>
@@ -62,17 +60,11 @@ impl<T: VecContent> Vec2<T> {
 // these operations only defined when T is convertible to and from an f64
 // from: we need it for sqrt
 // to: because it returns a T
-impl<T: VecContent + TryInto<f64> + TryFrom<f64>> Vec2<T> {
+impl<T: VecContent + Float> Vec2<T> {
     pub fn distance(&self, o: &Self) -> T {
-        use num::traits::{abs, pow};
-        // this is kinda wonky. converts to an f64 and maybe back to do this.
-        // also will panic on conversion failure (ie i64-> i32 overflow)
-        // TODO: better
-        let sqd: f64 = (pow(o.x - self.x, 2) + pow(o.y - self.y, 2))
-            .try_into()
-            .ok()
-            .unwrap();
-        abs(sqd.sqrt().try_into().ok().unwrap())
+        ((o.x - self.x).powi(2) + (o.y - self.y).powi(2))
+            .sqrt()
+            .abs()
     }
 
     pub fn mag(&self) -> T {
