@@ -2,6 +2,7 @@ use crate::planet::*;
 use crate::vec2::*;
 
 use std::ops::DerefMut;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex}; // arc = atomic rc = atomic ref count smart ptr
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
@@ -48,15 +49,24 @@ impl Simulator {
     }
 }
 
-pub fn sim_thread(amx: Arc<Mutex<[Planet]>>, sleep_dur: Duration, dt: f64) -> JoinHandle<()> {
+pub fn sim_thread(
+    amx: Arc<Mutex<[Planet]>>,
+    stop: Arc<AtomicBool>,
+    sleep_dur: Duration,
+    dt: f64,
+) -> JoinHandle<()> {
     let num_planets: usize;
     {
         num_planets = amx.lock().unwrap().len();
     }
     let mut sim = Simulator::new(num_planets);
 
-    thread::spawn(move || loop {
+    thread::spawn(move || {
         loop {
+            if stop.load(Ordering::Relaxed) {
+                println!("sim stop");
+                break;
+            }
             {
                 let mut mg_planets = amx.lock().unwrap();
                 // i think this is required to be explicitly called

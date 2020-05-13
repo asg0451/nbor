@@ -6,6 +6,7 @@ use terminal_size::{terminal_size, Height, Width};
 
 use std::io::{self, Write};
 use std::ops::Deref;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex}; // arc = atomic rc = atomic ref count smart ptr
 use std::thread::{self, JoinHandle};
 use std::time::Duration; // flush
@@ -87,6 +88,7 @@ impl Renderer {
 
 pub fn render_thread(
     amx: Arc<Mutex<[Planet]>>,
+    stop: Arc<AtomicBool>,
     sleep_dur: Duration,
     space_dims: Vec2<f64>,
     num_breadcrumbs: usize,
@@ -95,6 +97,10 @@ pub fn render_thread(
         let mut renderer = Renderer::new(num_breadcrumbs);
 
         loop {
+            if stop.load(Ordering::Relaxed) {
+                println!("ren stop");
+                break;
+            }
             {
                 let mg_planets = amx.lock().unwrap();
                 let str = renderer.pretty_print_term_with_breadcrumbs(
