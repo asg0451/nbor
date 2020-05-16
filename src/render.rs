@@ -1,5 +1,6 @@
 use crate::planet::*;
 use crate::ring_buffer::*;
+use crate::stats::*;
 use crate::vec2::*;
 
 use terminal_size::{terminal_size, Height, Width};
@@ -89,6 +90,7 @@ impl Renderer {
 pub fn render_thread(
     amx: Arc<Mutex<[Planet]>>,
     stop: Arc<AtomicBool>,
+    stats: Arc<Mutex<Stats>>,
     sleep_dur: Duration,
     space_dims: Vec2<f64>,
     num_breadcrumbs: usize,
@@ -103,13 +105,19 @@ pub fn render_thread(
             }
             {
                 let mg_planets = amx.lock().unwrap();
-                let str = renderer.pretty_print_term_with_breadcrumbs(
+                let stats = stats.lock().unwrap();
+
+                let planets_str = renderer.pretty_print_term_with_breadcrumbs(
                     mg_planets.deref(),
                     Screen::term_size(),
                     space_dims,
                 );
+
+                let stats_str = Screen::cursor_move(0, 0) + &stats.print();
+
                 print!("{}", Screen::CLEAR);
-                print!("{}", str);
+                print!("{}", planets_str);
+                print!("{}", stats_str);
                 io::stdout().flush().unwrap();
             }
             thread::sleep(sleep_dur);

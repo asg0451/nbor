@@ -2,6 +2,7 @@ mod planet;
 mod render;
 mod ring_buffer;
 mod sim;
+mod stats;
 mod util;
 mod vec2;
 
@@ -29,14 +30,27 @@ fn main() {
 
     let ren_sleep = Duration::from_millis(100);
     let sim_sleep = Duration::from_millis(0);
-
     let stop = Arc::new(AtomicBool::new(false));
-
     let planet_amx = Arc::new(Mutex::new(planets));
 
-    let ren_th =
-        render::render_thread(planet_amx.clone(), stop.clone(), ren_sleep, space_dims, 100);
-    let sim_th = sim::sim_thread(planet_amx.clone(), stop.clone(), sim_sleep, 0.0000001);
+    let stats = Arc::new(Mutex::new(stats::Stats::new()));
+
+    // TODO: move all arcs into one acr, clone that
+    let ren_th = render::render_thread(
+        planet_amx.clone(),
+        stop.clone(),
+        stats.clone(),
+        ren_sleep,
+        space_dims,
+        100,
+    );
+    let sim_th = sim::sim_thread(
+        planet_amx.clone(),
+        stop.clone(),
+        stats.clone(),
+        sim_sleep,
+        0.0000001,
+    );
 
     {
         let stop = stop.clone();
@@ -55,3 +69,5 @@ fn main() {
     ren_th.join().unwrap();
     sim_th.join().unwrap();
 }
+
+// TODO: display tick rate on screen

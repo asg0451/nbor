@@ -1,4 +1,5 @@
 use crate::planet::*;
+use crate::stats::*;
 use crate::vec2::*;
 
 use std::ops::DerefMut;
@@ -52,6 +53,7 @@ impl Simulator {
 pub fn sim_thread(
     amx: Arc<Mutex<[Planet]>>,
     stop: Arc<AtomicBool>,
+    stats: Arc<Mutex<Stats>>,
     sleep_dur: Duration,
     dt: f64,
 ) -> JoinHandle<()> {
@@ -62,16 +64,29 @@ pub fn sim_thread(
     let mut sim = Simulator::new(num_planets);
 
     thread::spawn(move || {
+        let mut ticks = 0;
         loop {
+            ticks += 1;
+
             if stop.load(Ordering::Relaxed) {
                 println!("sim stop");
                 break;
             }
             {
                 let mut mg_planets = amx.lock().unwrap();
+                let mut stats = stats.lock().unwrap();
+
                 // i think this is required to be explicitly called
                 // otherwise since array is copy it'll copy. same in ren thread
+
+                let log_p = ticks % 256 == 0;
+                if log_p {
+                    stats.log_start();
+                }
                 sim.tick(dt, 1.0, mg_planets.deref_mut());
+                if log_p {
+                    stats.log_end();
+                }
             }
             thread::sleep(sleep_dur);
         }
