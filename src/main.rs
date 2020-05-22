@@ -10,12 +10,10 @@ use planet::*;
 use render::*;
 use vec2::*;
 
-use std::io::{self, Write}; // flush
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc, Condvar, Mutex,
 }; // arc = atomic rc = atomic ref count smart ptr
-use std::thread;
 use std::time::Duration;
 
 fn main() {
@@ -35,7 +33,7 @@ fn main() {
 
     let stats = Arc::new(Mutex::new(stats::Stats::new()));
 
-    // TODO: move all arcs into one acr, clone that
+    // TODO?: move all arcs into one acr, clone that
     let ren_th = render::render_thread(
         planet_amx.clone(),
         stop.clone(),
@@ -52,12 +50,12 @@ fn main() {
         0.0000001,
     );
 
-    let stop_pair = Arc::new((Mutex::new(false), Condvar::new()));
+    let main_stop_pair = Arc::new((Mutex::new(false), Condvar::new()));
     {
-        let stop_pair = stop_pair.clone();
+        let main_stop_pair = main_stop_pair.clone();
         ctrlc::set_handler(move || {
             println!("caught cc");
-            let (lock, cvar) = &*stop_pair; // deref arc to unwrap, ref because we want a ref
+            let (lock, cvar) = &*main_stop_pair; // deref arc to unwrap, ref because we want a ref
             let mut stop = lock.lock().unwrap();
             *stop = true;
             cvar.notify_one();
@@ -65,11 +63,20 @@ fn main() {
         .unwrap();
     }
 
-    let (lock, cvar) = &*stop_pair;
-    let mut stop = lock.lock().unwrap();
-    while !*stop {
-        stop = cvar.wait(stop).unwrap();
+    let (lock, cvar) = &*main_stop_pair;
+    let mut main_stop = lock.lock().unwrap();
+    while !*main_stop {
+        main_stop = cvar.wait(main_stop).unwrap();
     }
-    println!("{} {}", Screen::CURSOR_VISIBLE, Screen::CLEAR);
+    println!("{}\n", Screen::CURSOR_VISIBLE);
     println!("stopping");
+    stop.store(true, Ordering::Relaxed);
+
+    ren_th.join().unwrap();
+    sim_th.join().unwrap();
+
+    let mut stats = stats.lock().unwrap();
+    stats
+        .dump(std::path::Path::new("durations.txt"))
+        .expect("failed to dump");
 }

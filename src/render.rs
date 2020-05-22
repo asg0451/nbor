@@ -105,7 +105,7 @@ pub fn render_thread(
             }
             {
                 let mg_planets = amx.lock().unwrap();
-                let stats = stats.lock().unwrap();
+                let mut stats = stats.lock().unwrap();
 
                 let planets_str = renderer.pretty_print_term_with_breadcrumbs(
                     mg_planets.deref(),
@@ -114,6 +114,7 @@ pub fn render_thread(
                 );
 
                 let stats_str = Screen::cursor_move(0, 0) + &stats.print();
+                stats.save_last_dur();
 
                 print!("{}", Screen::CLEAR);
                 print!("{}", planets_str);
