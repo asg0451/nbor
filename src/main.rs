@@ -17,8 +17,27 @@ use std::sync::{
 }; // arc = atomic rc = atomic ref count smart ptr
 use std::time::Duration;
 
+// arg parsing
+extern crate clap;
+use clap::{App, Arg};
+
 // TODO: look into https://nalgebra.org/vectors_and_matrices/
 fn main() {
+    let matches = App::new("nbor")
+        .arg(
+            Arg::with_name("dt")
+                .short("d")
+                .long("dt")
+                .takes_value(true)
+                .help("time delta"),
+        )
+        .get_matches();
+    let dt = matches
+        .value_of("dt")
+        .unwrap_or("1.0")
+        .parse::<f64>()
+        .expect("invalid value for dt");
+
     let space_dims = Vec2::new(
         1000.0 * real_data::NASA_RADIUS_FACTOR,
         500.0 * real_data::NASA_RADIUS_FACTOR,
@@ -43,14 +62,14 @@ fn main() {
         stats.clone(),
         ren_sleep,
         space_dims,
-        100,
+        1000,
     );
     let sim_th = sim::sim_thread(
         planet_amx.clone(),
         stop.clone(),
         stats.clone(),
         sim_sleep,
-        1.0,
+        dt,
         sim::Simulator::G_REAL,
     );
 
