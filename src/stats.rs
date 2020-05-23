@@ -32,7 +32,9 @@ impl Stats {
         if self.durs.is_empty() {
             return "".to_string();
         }
-        let avg = self.durs.iter().sum::<Duration>().as_nanos() / (self.durs.len() as u128);
+        let avg = Duration::from_nanos(
+            (self.durs.iter().sum::<Duration>().as_nanos() / (self.durs.len() as u128)) as u64,
+        );
         self.durs.sort();
         let mid = self.durs.len() / 2;
         let med = self.durs[mid];

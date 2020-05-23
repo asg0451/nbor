@@ -88,7 +88,7 @@ impl Renderer {
 }
 
 pub fn render_thread(
-    amx: Arc<Mutex<[Planet]>>,
+    amx: Arc<Mutex<Vec<Planet>>>,
     stop: Arc<AtomicBool>,
     stats: Arc<Mutex<Stats>>,
     sleep_dur: Duration,

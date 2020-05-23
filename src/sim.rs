@@ -14,6 +14,8 @@ pub struct Simulator {
 }
 
 impl Simulator {
+    pub const G_REAL: f64 = 6.674 * 10e-12;
+
     pub fn new(num_planets: usize) -> Self {
         Simulator {
             accels: vec![Vec2::zero(); num_planets],
@@ -51,11 +53,12 @@ impl Simulator {
 }
 
 pub fn sim_thread(
-    amx: Arc<Mutex<[Planet]>>,
+    amx: Arc<Mutex<Vec<Planet>>>,
     stop: Arc<AtomicBool>,
     stats: Arc<Mutex<Stats>>,
     sleep_dur: Duration,
     dt: f64,
+    g: f64,
 ) -> JoinHandle<()> {
     let num_planets: usize;
     {
@@ -83,7 +86,7 @@ pub fn sim_thread(
                 if log_p {
                     stats.log_start();
                 }
-                sim.tick(dt, 1.0, mg_planets.deref_mut());
+                sim.tick(dt, g, mg_planets.deref_mut());
                 if log_p {
                     stats.log_end();
                 }

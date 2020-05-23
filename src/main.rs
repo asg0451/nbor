@@ -1,4 +1,5 @@
 mod planet;
+mod real_data;
 mod render;
 mod ring_buffer;
 mod sim;
@@ -16,13 +17,15 @@ use std::sync::{
 }; // arc = atomic rc = atomic ref count smart ptr
 use std::time::Duration;
 
+// TODO: look into https://nalgebra.org/vectors_and_matrices/
 fn main() {
-    // TODO: look into https://nalgebra.org/vectors_and_matrices/
-    let p = Planet::new(10.0, Vec2::new(7.0, 5.0), Vec2::new(1.0, 0.0));
-    let p2 = Planet::new(10.0, Vec2::new(4.0, 6.0), Vec2::new(0.0, -1.0));
-    let planets = [p, p2]; // not mut because copy
-
-    let space_dims = Vec2::new(10.0, 10.0);
+    let space_dims = Vec2::new(
+        1000.0 * real_data::NASA_RADIUS_FACTOR,
+        500.0 * real_data::NASA_RADIUS_FACTOR,
+    );
+    let sun: Planet = Planet::new(real_data::MASS_OF_SUN, space_dims / 2.0, Vec2::zero());
+    let mut planets = vec![sun];
+    planets.append(&mut real_data::real_planets(sun));
 
     print!("{}", Screen::CURSOR_INVISIBLE);
 
@@ -33,7 +36,7 @@ fn main() {
 
     let stats = Arc::new(Mutex::new(stats::Stats::new()));
 
-    // TODO?: move all arcs into one acr, clone that
+    // TODO?: move all arcs into one arc, clone that
     let ren_th = render::render_thread(
         planet_amx.clone(),
         stop.clone(),
@@ -47,7 +50,8 @@ fn main() {
         stop.clone(),
         stats.clone(),
         sim_sleep,
-        0.0000001,
+        1.0,
+        sim::Simulator::G_REAL,
     );
 
     let main_stop_pair = Arc::new((Mutex::new(false), Condvar::new()));
@@ -66,7 +70,14 @@ fn main() {
     let (lock, cvar) = &*main_stop_pair;
     let mut main_stop = lock.lock().unwrap();
     while !*main_stop {
-        main_stop = cvar.wait(main_stop).unwrap();
+        let (ml, timeout_res) = cvar
+            .wait_timeout(main_stop, Duration::from_secs(10))
+            .unwrap();
+        main_stop = ml;
+        if timeout_res.timed_out() {
+            println!("\ntimeout");
+            break;
+        }
     }
     println!("{}\n", Screen::CURSOR_VISIBLE);
     println!("stopping");
@@ -79,4 +90,5 @@ fn main() {
     stats
         .dump(std::path::Path::new("durations.txt"))
         .expect("failed to dump");
+    println!("dumped durations")
 }
